@@ -53,15 +53,17 @@ export function HojaInforme({ d, id }: { d: Informe; id: string }) {
       <h3 className="mt-5 border-b border-border pb-1 text-[11px] font-semibold tracking-widest text-primary">
         I. DATOS GENERALES
       </h3>
-      <dl className="mt-3 space-y-1.5">
-        {datosGenerales(d).map(([k, v]) => (
-          <div key={k} className="flex items-baseline gap-4">
-            <dt className="w-52 shrink-0 text-muted-foreground">{k}</dt>
-            <dd className="min-w-0 flex-1 whitespace-nowrap font-semibold">{v || "—"}</dd>
-          </div>
-        ))}
+      <table className="mt-3 w-full border-collapse">
+        <tbody>
+          {datosGenerales(d).map(([k, v]) => (
+            <tr key={k}>
+              <td className="w-52 py-[3px] align-top text-muted-foreground">{k}</td>
+              <td className="py-[3px] align-top font-semibold">{v || "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-      </dl>
 
       {bloques(d).map(([t, v]) => (
         <section key={t} className="mt-5">
