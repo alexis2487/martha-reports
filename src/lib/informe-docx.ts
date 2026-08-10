@@ -35,7 +35,7 @@ const celda = (children: Paragraph[], width: number, fill?: string) =>
   new TableCell({
     borders: bordes,
     width: { size: width, type: WidthType.DXA },
-    shading: fill ? { fill, type: ShadingType.CLEAR } : undefined,
+    ...(fill ? { shading: { fill, type: ShadingType.CLEAR } } : {}),
     margins: { top: 80, bottom: 80, left: 120, right: 120 },
     children,
   });
@@ -45,7 +45,7 @@ const p = (text: string, opts: { bold?: boolean; size?: number; color?: string }
     children: [
       new TextRun({
         text,
-        bold: opts.bold,
+        bold: opts.bold ?? false,
         size: opts.size ?? 22,
         color: opts.color ?? "1A1F1F",
       }),
