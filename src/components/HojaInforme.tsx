@@ -55,11 +55,12 @@ export function HojaInforme({ d, id }: { d: Informe; id: string }) {
       </h3>
       <dl className="mt-3 space-y-1.5">
         {datosGenerales(d).map(([k, v]) => (
-          <div key={k} className="flex gap-4">
+          <div key={k} className="flex items-baseline gap-4">
             <dt className="w-52 shrink-0 text-muted-foreground">{k}</dt>
-            <dd className="font-semibold">{v || "—"}</dd>
+            <dd className="min-w-0 flex-1 whitespace-nowrap font-semibold">{v || "—"}</dd>
           </div>
         ))}
+
       </dl>
 
       {bloques(d).map(([t, v]) => (
