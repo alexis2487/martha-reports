@@ -1,34 +1,30 @@
 import { jsPDF } from "jspdf";
-
-export type Informe = {
-  dia: string;
-  mes: string;
-  anio: string;
-  nombres: string;
-  documento: string;
-  edad: string;
-  sexo: string;
-  nacimiento: string;
-  hermanos: string;
-  escolarizacion: string;
-  estadoCivil: string;
-  motivo: string;
-  examenMental: string;
-  dinamicaFamiliar: string;
-  areaEscolar: string;
-  antecedentes: string;
-  recomendaciones: string;
-  profesional: string;
-  tarjeta: string;
-};
+import {
+  CONFIDENCIALIDAD,
+  PROFESIONAL,
+  TARJETA,
+  bloques,
+  datosGenerales,
+  logoDataUrl,
+  nombreArchivo,
+  type Informe,
+} from "./informe";
 
 const M = 18;
 const W = 210;
 const CW = W - M * 2;
 
-export function generarPdf(d: Informe) {
+export async function generarPdf(d: Informe) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const logo = await logoDataUrl();
   let y = M;
+
+  const footer = (dd: jsPDF) => {
+    dd.setFont("helvetica", "italic");
+    dd.setFontSize(7.5);
+    dd.setTextColor(120, 130, 128);
+    dd.text(CONFIDENCIALIDAD, W / 2, 285, { align: "center", maxWidth: CW });
+  };
 
   const ensure = (h: number) => {
     if (y + h > 297 - 22) {
@@ -38,24 +34,23 @@ export function generarPdf(d: Informe) {
     }
   };
 
-  const header = () => {
-    doc.setDrawColor(30, 80, 78);
-    doc.setLineWidth(0.4);
-    doc.rect(M, y, CW, 18);
-    doc.line(M + 26, y, M + 26, y + 18);
-    doc.setFillColor(30, 80, 78);
-    doc.circle(M + 13, y + 9, 6, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("MM", M + 13, y + 10.5, { align: "center" });
-    doc.setTextColor(20, 30, 30);
-    doc.setFontSize(15);
-    doc.text("ATENCIÓN PSICOLÓGICA", M + 26 + (CW - 26) / 2, y + 11, {
-      align: "center",
-    });
-    y += 24;
-  };
+  // Encabezado
+  doc.setDrawColor(30, 80, 78);
+  doc.setLineWidth(0.4);
+  doc.rect(M, y, CW, 22);
+  doc.line(M + 30, y, M + 30, y + 22);
+  doc.addImage(logo, "PNG", M + 5, y + 2, 18, 18);
+  doc.setTextColor(20, 30, 30);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.text("ATENCIÓN PSICOLÓGICA", M + 30 + (CW - 30) / 2, y + 11, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(90, 110, 108);
+  doc.text(`${PROFESIONAL} · T.P ${TARJETA}`, M + 30 + (CW - 30) / 2, y + 17, {
+    align: "center",
+  });
+  y += 28;
 
   const label = (t: string) => {
     ensure(12);
@@ -85,21 +80,7 @@ export function generarPdf(d: Informe) {
     y += h + 6;
   };
 
-  const footer = (dd: jsPDF) => {
-    dd.setFont("helvetica", "italic");
-    dd.setFontSize(7.5);
-    dd.setTextColor(120, 130, 128);
-    dd.text(
-      "“Este documento es de carácter confidencial y no podrá ser utilizado para otros fines distintos para los que ha sido realizado, ni divulgarse”",
-      W / 2,
-      285,
-      { align: "center", maxWidth: CW },
-    );
-  };
-
-  header();
-
-  // fecha
+  // Fecha
   const bw = 22;
   const bx = M + CW - bw * 3;
   doc.setDrawColor(30, 80, 78);
@@ -120,22 +101,12 @@ export function generarPdf(d: Informe) {
   y += 20;
 
   label("I. Datos generales");
-  const datos: [string, string][] = [
-    ["Nombres y apellidos", d.nombres],
-    ["Documento de identidad", d.documento],
-    ["Edad", d.edad],
-    ["Sexo", d.sexo],
-    ["Fecha de nacimiento", d.nacimiento],
-    ["Número de hermanos", d.hermanos],
-    ["Escolarización", d.escolarizacion],
-    ["Estado civil", d.estadoCivil],
-  ];
-  datos.forEach(([k, v]) => {
+  datosGenerales(d).forEach(([k, v]) => {
     ensure(7);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(95, 105, 103);
-    doc.text(`${k}`, M + 2, y);
+    doc.text(k, M + 2, y);
     doc.setTextColor(20, 25, 25);
     doc.setFont("helvetica", "bold");
     doc.text(v || "—", M + 68, y);
@@ -143,14 +114,9 @@ export function generarPdf(d: Informe) {
   });
   y += 4;
 
-  block("Motivo de consulta", d.motivo);
-  block("Examen mental aparente", d.examenMental);
-  block("Dinámica familiar", d.dinamicaFamiliar);
-  block("Área escolar", d.areaEscolar);
-  block("Antecedentes relevantes", d.antecedentes);
-  block("Recomendaciones", d.recomendaciones);
+  bloques(d).forEach(([t, v]) => block(t, v));
 
-  ensure(40);
+  ensure(45);
   y += 10;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
@@ -162,14 +128,12 @@ export function generarPdf(d: Informe) {
   y += 6;
   doc.setTextColor(20, 25, 25);
   doc.setFontSize(10.5);
-  doc.text(d.profesional.toUpperCase(), W / 2, y, { align: "center" });
+  doc.text(PROFESIONAL.toUpperCase(), W / 2, y, { align: "center" });
   y += 5.5;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
-  doc.text(`T.P ${d.tarjeta}`, W / 2, y, { align: "center" });
+  doc.text(`T.P ${TARJETA}`, W / 2, y, { align: "center" });
 
   footer(doc);
-
-  const nombre = (d.nombres || "informe").trim().replace(/\s+/g, "_");
-  doc.save(`Informe_Psicologico_${nombre}.pdf`);
+  doc.save(nombreArchivo(d, "pdf"));
 }
