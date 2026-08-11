@@ -167,6 +167,8 @@ function Index() {
     setCargando(clave);
     try {
       await fn();
+      setD(inicial);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setCargando(null);
     }
